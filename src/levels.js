@@ -1,4 +1,4 @@
-// Level Manager Class - All level data
+// Level Manager Class - MEDIUM DIFFICULTY with Smoke & Crystal Orbs
 class LevelManager {
     static levels = {
         1: {
@@ -53,8 +53,80 @@ class LevelManager {
                 { x: 440, y: 500, width: 240, height: 6, orientation: 'horizontal', onMs: 900, offMs: 700, phaseMs: 0 }
             ]
         },
+
+        // 🔥💧 NEW MEDIUM LEVEL - Based on Easy Layout with Orb Powers!
+       // EASY-MEDIUM Level 2 - Much simpler with gentle orb introduction
+2: {
+    name: "Easy-Medium - Gentle Orb Training",
+    platforms: [
+        // Ground level (very similar to Level 1 - familiar and comfortable)
+        { x: 0, y: 550, width: 220, height: 50, type: 'stone' },
+        { x: 300, y: 550, width: 160, height: 50, type: 'stone' },
+        { x: 540, y: 550, width: 140, height: 50, type: 'stone' },
+        { x: 760, y: 550, width: 200, height: 50, type: 'stone' },
+        { x: 1040, y: 550, width: 160, height: 50, type: 'stone' },
+
+        // Simple hazard pools (just like Level 1 but one extra)
+        { x: 220, y: 530, width: 80, height: 20, type: 'lava' },
+        { x: 460, y: 530, width: 80, height: 20, type: 'water' },
+        { x: 680, y: 530, width: 80, height: 20, type: 'acid' }, // Just one acid - easy to avoid
+
+        // Simple stepping stones (very similar to Level 1)
+        { x: 80, y: 480, width: 120, height: 30, type: 'stone' },
+        { x: 340, y: 470, width: 120, height: 30, type: 'stone' },
+        { x: 580, y: 470, width: 120, height: 30, type: 'stone' },
+        { x: 800, y: 460, width: 140, height: 30, type: 'stone' },
+        { x: 1080, y: 400, width: 120, height: 30, type: 'stone' },
         
-        2: {
+        // Just ONE upper level (simple and clear path)
+        { x: 120, y: 410, width: 120, height: 30, type: 'stone' },
+        { x: 380, y: 400, width: 140, height: 30, type: 'stone' },
+        { x: 620, y: 400, width: 120, height: 30, type: 'stone' },
+        { x: 840, y: 390, width: 140, height: 30, type: 'stone' },
+        { x: 1020, y: 340, width: 180, height: 30, type: 'stone' },
+
+        // JUST TWO tiny walls (super easy to understand)
+        { x: 520, y: 400, width: 20, height: 40, type: 'wall' }, // Tiny wall 1
+        { x: 980, y: 390, width: 20, height: 50, type: 'wall' }, // Tiny wall 2
+
+        // JUST ONE easy moving platform (like Level 1)
+        { x: 260, y: 370, width: 80, height: 20, type: 'moving', moveX: true, range: 80, speed: 0.8 }, // SLOW and easy
+
+        // Boundary walls
+        { x: 0, y: 0, width: 20, height: 600, type: 'wall' },
+        { x: 1180, y: 0, width: 20, height: 600, type: 'wall' },
+        { x: 0, y: 580, width: 1200, height: 20, type: 'stone' },
+    ],
+    collectibles: [
+        // FEWER gems - just like Level 1 + a couple more
+        { x: 120, y: 450, type: 'fire_gem' },         // Ground level
+        { x: 380, y: 440, type: 'water_gem' },        // Ground level
+        { x: 160, y: 380, type: 'fire_gem' },         // Upper level
+        { x: 660, y: 370, type: 'water_gem' },        // Upper level
+        { x: 1100, y: 310, type: 'special_gem' },     // Near goals - easy to get
+        
+        // TWO ORBS - simple placement
+        { x: 420, y: 370, type: 'smoke_orb' },        // Easy to reach, for walls
+        { x: 880, y: 360, type: 'crystal_orb' },      // Easy to reach, for laser
+    ],
+    goals: [
+        { x: 1120, y: 310, width: 30, height: 30, type: 'fire' },    // Easy to reach
+        { x: 1160, y: 310, width: 30, height: 30, type: 'water' }     // Easy to reach
+    ],
+    spikes: [
+        // VERY FEW spikes - just for tiny bit of challenge
+        { x: 260, y: 540, width: 20, height: 10 },   // Near lava
+        { x: 500, y: 540, width: 20, height: 10 },   // Near water
+        { x: 720, y: 540, width: 20, height: 10 },   // Near acid
+        { x: 1000, y: 380, width: 20, height: 10 },  // Upper area (light challenge)
+    ],
+    lasers: [
+        // JUST ONE easy laser (slow timing)
+        { x: 740, y: 360, width: 100, height: 6, orientation: 'horizontal', onMs: 2000, offMs: 2000, phaseMs: 0 } // VERY slow timing
+    ]
+},
+        
+        3: {
             name: "Crystal Caverns",
             platforms: [
                 // Complex multi-tier stone structure
@@ -109,7 +181,7 @@ class LevelManager {
             ],
         },
         
-        3: {
+        4: {
             name: "Temple of Elements",
             platforms: [
                 // Massive temple structure
