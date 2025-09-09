@@ -134,22 +134,29 @@ class LevelManager {
                 
                 // Left side ascending platforms
                 { x: 50, y: 480, width: 100, height: 25, type: 'stone' },
-                { x: 0, y: 420, width: 120, height: 25, type: 'stone' },
-                { x: 80, y: 360, width: 100, height: 25, type: 'stone' },
-                { x: 20, y: 300, width: 80, height: 25, type: 'stone' },
-                { x: 150, y: 240, width: 100, height: 25, type: 'stone' },
+                { x: 0, y: 410, width: 120, height: 25, type: 'stone' },
+                { x: 80, y: 330, width: 100, height: 25, type: 'stone' },
+                { x: 20, y: 250, width: 80, height: 25, type: 'stone' },
+                { x: 150, y: 160, width: 100, height: 25, type: 'stone' },
                 
                 // Center floating islands
                 { x: 300, y: 450, width: 200, height: 30, type: 'stone' },
-                { x: 250, y: 350, width: 100, height: 25, type: 'stone' },
-                { x: 400, y: 280, width: 120, height: 25, type: 'stone' },
-                { x: 300, y: 180, width: 200, height: 30, type: 'stone' },
+                { x: 250, y: 340, width: 100, height: 25, type: 'stone' },
+                { x: 400, y: 250, width: 120, height: 25, type: 'stone' },
+                { x: 300, y: 150, width: 200, height: 30, type: 'stone' },
                 
                 // Right side complex
                 { x: 600, y: 480, width: 150, height: 25, type: 'stone' },
-                { x: 650, y: 400, width: 100, height: 25, type: 'stone' },
-                { x: 580, y: 320, width: 120, height: 25, type: 'stone' },
-                { x: 650, y: 240, width: 100, height: 25, type: 'stone' },
+                { x: 650, y: 390, width: 100, height: 25, type: 'stone' },
+                { x: 580, y: 300, width: 120, height: 25, type: 'stone' },
+                { x: 650, y: 210, width: 100, height: 25, type: 'stone' },
+
+                // Internal walls for Smoke Orb traversal
+                { x: 240, y: 460, width: 20, height: 120, type: 'wall' },
+                { x: 500, y: 300, width: 20, height: 180, type: 'wall' },
+
+                // Ceiling walkway for Gravity Orb route (more clearance)
+                { x: 100, y: 50, width: 600, height: 20, type: 'stone' },
                 
                 // Hazard pools
                 { x: 200, y: 530, width: 80, height: 20, type: 'lava' },
@@ -168,6 +175,11 @@ class LevelManager {
                 { x: 420, y: 250, type: 'fire_gem' },
                 { x: 670, y: 370, type: 'water_gem' },
                 { x: 670, y: 210, type: 'fire_gem' },
+
+                // Orbs to introduce advanced mechanics
+                { x: 230, y: 430, type: 'smoke_orb' },    // Near inner wall corridor
+                { x: 520, y: 330, type: 'crystal_orb' },  // Near laser lane
+                { x: 120, y: 120, type: 'gravity_orb' },  // Near ceiling route
             ],
             goals: [
                 { x: 320, y: 150, width: 30, height: 30, type: 'fire' },
@@ -178,6 +190,15 @@ class LevelManager {
                 { x: 280, y: 340, width: 20, height: 10 },
                 { x: 520, y: 470, width: 20, height: 10 },
                 { x: 600, y: 310, width: 20, height: 10 },
+                // Ceiling spikes to encourage Gravity Orb use
+                { x: 140, y: 70, width: 40, height: 10 },
+                { x: 460, y: 70, width: 40, height: 10 },
+            ],
+
+            // Lasers for Crystal Orb blocking/reflecting tactic
+            lasers: [
+                { x: 220, y: 420, width: 300, height: 6, orientation: 'horizontal', onMs: 1200, offMs: 900, phaseMs: 0 },
+                { x: 510, y: 220, width: 6, height: 180, orientation: 'vertical', onMs: 1000, offMs: 800, phaseMs: 300 }
             ],
         },
         
