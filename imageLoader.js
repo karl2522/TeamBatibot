@@ -6,8 +6,8 @@ class ImageLoader {
     static loadImages() {
         return new Promise((resolve) => {
             const imagesToLoad = [
-                { name: 'fireboy', src: 'fireboy.png' },
-                { name: 'watergirl', src: 'watergirl.png' }
+                { name: 'fireboy', src: 'images/fireboy.png' },
+                { name: 'watergirl', src: 'images/watergirl.png' }
             ];
             
             let loadedCount = 0;
