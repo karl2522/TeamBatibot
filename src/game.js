@@ -3,8 +3,39 @@ class Game {
     constructor(options = {}) {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
+        // Base world size (game logic coordinates)
+        this.baseWidth = 1200; // expanded logical width to let walls touch edges at widescreen
+        this.baseHeight = 600;
+
+        // Resize canvas to fill viewport while scaling world to full width
+        const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+        const resize = () => {
+            const cssWidth = window.innerWidth;
+            const cssHeight = window.innerHeight;
+            this.canvas.style.width = cssWidth + 'px';
+            this.canvas.style.height = cssHeight + 'px';
+            this.canvas.width = Math.floor(cssWidth * dpr);
+            this.canvas.height = Math.floor(cssHeight * dpr);
+            this.width = this.canvas.width;
+            this.height = this.canvas.height;
+            this.dpr = dpr;
+
+            // Scale world to full browser width (no horizontal gaps) and center vertically
+            this.renderScale = cssWidth / this.baseWidth;
+            const scaledWorldWidth = this.baseWidth * this.renderScale;
+            const scaledWorldHeight = this.baseHeight * this.renderScale;
+            this.offsetX = 0;
+            this.offsetY = Math.max(0, (cssHeight - scaledWorldHeight) / 2);
+
+            // Reset device pixel ratio transform; world transform applied per-frame
+            this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        // Share world size with Player bounds logic
+        Player.worldWidth = this.baseWidth;
+        Player.worldHeight = this.baseHeight;
         
         // Show loading message
         this.showLoadingScreen();
@@ -16,17 +47,13 @@ class Game {
     }
     
     showLoadingScreen() {
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.height);
-        gradient.addColorStop(0, '#2C3E50');
-        gradient.addColorStop(1, '#1A252F');
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.drawBackgroundImage();
         
         this.ctx.fillStyle = '#FFF';
-        this.ctx.font = '24px Arial';
+        this.ctx.font = "24px 'New Rocker', Arial";
         this.ctx.textAlign = 'center';
         this.ctx.fillText('🔥💧 Loading Fireboy & Watergirl...', this.width/2, this.height/2);
-        this.ctx.font = '16px Arial';
+        this.ctx.font = "16px 'New Rocker', Arial";
         this.ctx.fillText('Please wait while we load the characters', this.width/2, this.height/2 + 40);
         this.ctx.textAlign = 'left';
     }
@@ -218,13 +245,17 @@ class Game {
     }
     
     render() {
-        // Clear canvas with temple background
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.height);
-        gradient.addColorStop(0, '#2C3E50');
-        gradient.addColorStop(1, '#1A252F');
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, this.width, this.height);
+        // Draw image background (cover)
+        this.drawBackgroundImage();
         
+        // Apply world transform (scale to full width and center vertically)
+        this.ctx.save();
+        this.ctx.translate(this.offsetX || 0, this.offsetY || 0);
+        this.ctx.scale(this.renderScale || 1, this.renderScale || 1);
+
+        // Draw world edge frame behind platforms
+        this.drawWorldFrame();
+
         // Draw platforms
         this.platforms.forEach(platform => {
             switch(platform.type) {
@@ -276,28 +307,92 @@ class Game {
             PlatformRenderer.drawGoal(this.ctx, goal.x, goal.y, goal.width, goal.height, goal.type);
         });
         
-        // Draw UI
-        this.drawUI();
-        
         // Draw players
         this.fireboy.render(this.ctx);
         this.watergirl.render(this.ctx);
+
+        // Draw UI within world space so it scales consistently
+        this.drawUI();
+
+        this.ctx.restore();
+
+        // Fill edge columns so side grids reach the page edges even with vertical letterboxing
+        this.drawEdgeColumns();
     }
     
     drawUI() {
         this.ctx.fillStyle = '#FFF';
-        this.ctx.font = '20px Arial';
+        this.ctx.font = "20px 'New Rocker', Arial";
         this.ctx.fillText(`Level ${this.currentLevel}: ${this.levelData.name}`, 20, 30);
         this.ctx.fillText(`Gems: ${this.collectibles.length}`, 20, 60);
         
-        this.ctx.font = '14px Arial';
-        this.ctx.fillText('Fireboy: Arrow Keys | Watergirl: WASD', 20, this.height - 20);
+        this.ctx.font = "14px 'New Rocker', Arial";
+        this.ctx.fillText('Fireboy: Arrow Keys | Watergirl: WASD', 20, this.baseHeight - 20);
         
         // Show image loading status
         if (ImageLoader.loaded) {
             this.ctx.fillStyle = '#90EE90';
-            this.ctx.font = '12px Arial';
-            this.ctx.fillText('✅ Characters Loaded', 20, this.height - 40);
+            this.ctx.font = "12px 'New Rocker', Arial";
+            this.ctx.fillText('✅ Characters Loaded', 20, this.baseHeight - 40);
+        }
+    }
+
+    drawEdgeColumns() {
+        const cssWidth = this.canvas.width / (this.dpr || 1);
+        const cssHeight = this.canvas.height / (this.dpr || 1);
+        const worldWidth = this.baseWidth * (this.renderScale || 1);
+        const worldHeight = this.baseHeight * (this.renderScale || 1);
+        const ox = this.offsetX || 0;
+        const oy = this.offsetY || 0;
+
+        // Top band
+        if (oy > 0) {
+            PlatformRenderer.drawStoneBlock(this.ctx, 0, 0, cssWidth, oy);
+        }
+        // Bottom band
+        const bottomY = oy + worldHeight;
+        if (bottomY < cssHeight) {
+            PlatformRenderer.drawStoneBlock(this.ctx, 0, bottomY, cssWidth, cssHeight - bottomY);
+        }
+        // Left band
+        if (ox > 0) {
+            PlatformRenderer.drawStoneBlock(this.ctx, 0, 0, ox, cssHeight);
+        }
+        // Right band
+        const rightX = ox + worldWidth;
+        if (rightX < cssWidth) {
+            PlatformRenderer.drawStoneBlock(this.ctx, rightX, 0, cssWidth - rightX, cssHeight);
+        }
+    }
+
+    drawWorldFrame() {
+        // Render a continuous stone frame inside world space so edges always look complete
+        const wallThickness = 20;
+        const floorHeight = 50;
+        PlatformRenderer.drawStoneBlock(this.ctx, 0, 0, wallThickness, this.baseHeight);
+        PlatformRenderer.drawStoneBlock(this.ctx, this.baseWidth - wallThickness, 0, wallThickness, this.baseHeight);
+        PlatformRenderer.drawStoneBlock(this.ctx, 0, this.baseHeight - floorHeight, this.baseWidth, floorHeight);
+    }
+
+    drawBackgroundImage() {
+        const img = ImageLoader.getImage('game-bg');
+        if (img && img.complete && img.naturalWidth) {
+            const cw = this.width;
+            const ch = this.height;
+            const iw = img.naturalWidth;
+            const ih = img.naturalHeight;
+            const cover = Math.max(cw / iw, ch / ih);
+            const dw = iw * cover;
+            const dh = ih * cover;
+            const dx = (cw - dw) / 2;
+            const dy = (ch - dh) / 2;
+            this.ctx.drawImage(img, 0, 0, iw, ih, dx, dy, dw, dh);
+        } else {
+            const gradient = this.ctx.createLinearGradient(0, 0, 0, this.height);
+            gradient.addColorStop(0, '#2C3E50');
+            gradient.addColorStop(1, '#1A252F');
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(0, 0, this.width, this.height);
         }
     }
     

@@ -8,6 +8,8 @@ class LevelManager {
                 { x: 0, y: 550, width: 200, height: 50, type: 'stone' },
                 { x: 250, y: 550, width: 300, height: 50, type: 'stone' },
                 { x: 600, y: 550, width: 200, height: 50, type: 'stone' },
+                // Extended right-side ground to match 1200px world width
+                { x: 800, y: 550, width: 400, height: 50, type: 'stone' },
                 
                 // Multi-level stone platforms
                 { x: 100, y: 450, width: 150, height: 30, type: 'stone' },
@@ -30,7 +32,9 @@ class LevelManager {
                 
                 // Walls (for more complex navigation)
                 { x: 0, y: 0, width: 20, height: 600, type: 'wall' },
-                { x: 780, y: 0, width: 20, height: 600, type: 'wall' },
+                { x: 1180, y: 0, width: 20, height: 600, type: 'wall' },
+                // Bottom frame (collidable floor) spanning entire width
+                { x: 0, y: 580, width: 1200, height: 20, type: 'stone' },
             ],
             collectibles: [
                 { x: 120, y: 420, type: 'fire_gem' },

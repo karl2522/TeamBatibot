@@ -23,7 +23,11 @@ window.addEventListener('load', () => {
     // Button handlers
     btnPlay.addEventListener('click', () => {
         forcePlayAudio();
-        start(1);
+        // Show difficulty selection instead of immediately starting
+        levelsPanel.classList.remove('hidden');
+        optionsPanel.classList.add('hidden');
+        mainButtons.classList.add('hidden');
+        menuContent.classList.add('panel-open');
     });
 
     btnLevels.addEventListener('click', () => {

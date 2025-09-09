@@ -105,12 +105,13 @@ class Player {
         });
         
         // Keep player in horizontal bounds
+        const worldWidth = Player.worldWidth || 800;
         if (this.x < 0) {
             this.x = 0;
             this.velocityX = 0;
         }
-        if (this.x + this.width > 800) {
-            this.x = 800 - this.width;
+        if (this.x + this.width > worldWidth) {
+            this.x = worldWidth - this.width;
             this.velocityX = 0;
         }
     }
@@ -148,7 +149,8 @@ class Player {
         });
         
         // Keep player in vertical bounds
-        if (this.y > 600) {
+        const worldHeight = Player.worldHeight || 600;
+        if (this.y > worldHeight) {
             this.respawn();
         }
     }
