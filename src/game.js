@@ -290,7 +290,10 @@ class Game {
     checkWinCondition() {
         const fireboyAtGoal = this.checkCollision(this.fireboy, this.goals.find(g => g.type === 'fire'));
         const watergirlAtGoal = this.checkCollision(this.watergirl, this.goals.find(g => g.type === 'water'));
-        const allGemsCollected = this.collectibles.length === 0;
+        const total = (this.levelData.collectibles && this.levelData.collectibles.length) || 0;
+        const required = this.levelData.requiredCollectibles || total;
+        const collected = Math.max(0, total - this.collectibles.length);
+        const allGemsCollected = collected >= required;
         
         if (fireboyAtGoal && watergirlAtGoal && allGemsCollected) {
             this.nextLevel();
@@ -420,7 +423,10 @@ class Game {
         this.ctx.fillStyle = '#FFF';
         this.ctx.font = "20px 'New Rocker', Arial";
         this.ctx.fillText(`Level ${this.currentLevel}: ${this.levelData.name}`, 20, 30);
-        this.ctx.fillText(`Gems: ${this.collectibles.length}`, 20, 60);
+        const total = (this.levelData.collectibles && this.levelData.collectibles.length) || 0;
+        const required = this.levelData.requiredCollectibles || total;
+        const collected = Math.max(0, total - this.collectibles.length);
+        this.ctx.fillText(`Gems: ${collected} / ${required}`, 20, 60);
         if (this.isImmune('fireboy') || this.isImmune('watergirl')) {
             const remain = Math.ceil(Math.max(this.immunityUntil.fireboy, this.immunityUntil.watergirl) - performance.now()) / 1000;
             this.ctx.fillText(`Crystal Orb: ${Math.max(0, remain).toFixed(1)}s`, 20, 90);

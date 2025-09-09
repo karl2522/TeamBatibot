@@ -128,6 +128,7 @@ class LevelManager {
         
         3: {
             name: "Crystal Caverns",
+            requiredCollectibles: 9,
             platforms: [
                 // Complex multi-tier stone structure
                 { x: 0, y: 550, width: 800, height: 50, type: 'stone' },
