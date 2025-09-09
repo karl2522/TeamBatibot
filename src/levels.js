@@ -169,21 +169,21 @@ class LevelManager {
             ],
             collectibles: [
                 { x: 70, y: 450, type: 'fire_gem' },
-                { x: 90, y: 330, type: 'water_gem' },
+                { x: 90, y: 310, type: 'water_gem' },
                 { x: 170, y: 210, type: 'fire_gem' },
-                { x: 320, y: 420, type: 'water_gem' },
-                { x: 420, y: 250, type: 'fire_gem' },
+                { x: 320, y: 400, type: 'water_gem' },
+                { x: 420, y: 230, type: 'fire_gem' },
                 { x: 670, y: 370, type: 'water_gem' },
-                { x: 670, y: 210, type: 'fire_gem' },
+                { x: 670, y: 190, type: 'fire_gem' },
 
                 // Orbs to introduce advanced mechanics
-                { x: 230, y: 430, type: 'smoke_orb' },    // Near inner wall corridor
-                { x: 520, y: 330, type: 'crystal_orb' },  // Near laser lane
+                { x: 210, y: 430, type: 'smoke_orb' },    // Offset from inner wall
+                { x: 540, y: 330, type: 'crystal_orb' },  // Clear of vertical wall
                 { x: 120, y: 120, type: 'gravity_orb' },  // Near ceiling route
             ],
             goals: [
-                { x: 320, y: 150, width: 30, height: 30, type: 'fire' },
-                { x: 370, y: 150, width: 30, height: 30, type: 'water' }
+                { x: 320, y: 110, width: 30, height: 30, type: 'fire' },
+                { x: 370, y: 110, width: 30, height: 30, type: 'water' }
             ],
             spikes: [
                 { x: 180, y: 470, width: 20, height: 10 },
