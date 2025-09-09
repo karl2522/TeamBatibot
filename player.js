@@ -1,4 +1,4 @@
-// Player Class with PNG support and SIMPLE working rendering
+// Player Class with FIXED collision detection for jumping under platforms
 class Player {
     constructor(x, y, color, type) {
         this.x = x;
@@ -9,10 +9,10 @@ class Player {
         this.type = type;
         this.velocityX = 0;
         this.velocityY = 0;
-        this.speed = 3;
-        this.jumpPower = 15;
+        this.speed = 2;
+        this.jumpPower = 12;
         this.gravity = 0.6;
-        this.maxFallSpeed = 15;
+        this.maxFallSpeed = 12;
         this.onGround = false;
         this.facingDirection = 1; // 1 = right, -1 = left
         this.walkAnimation = 0;
@@ -75,15 +75,47 @@ class Player {
             }
         }
         
-        // Update position
+        // Update position step by step for better collision detection
         this.x += this.velocityX;
-        this.y += this.velocityY;
+        this.handleHorizontalCollisions(platforms, hazards, spikes, prevX);
         
-        // Collision detection
-        this.handleCollisions(platforms, hazards, spikes, prevX, prevY);
+        this.y += this.velocityY;
+        this.handleVerticalCollisions(platforms, hazards, spikes, prevY);
     }
     
-    handleCollisions(platforms, hazards, spikes, prevX, prevY) {
+    handleHorizontalCollisions(platforms, hazards, spikes, prevX) {
+        platforms.forEach(platform => {
+            if (this.checkCollision(platform)) {
+                if (hazards.includes(platform.type)) {
+                    this.respawn();
+                    return;
+                }
+                
+                // Hitting platform from left (moving right)
+                if (this.velocityX > 0 && prevX + this.width <= platform.x) {
+                    this.x = platform.x - this.width;
+                    this.velocityX = 0;
+                }
+                // Hitting platform from right (moving left)
+                else if (this.velocityX < 0 && prevX >= platform.x + platform.width) {
+                    this.x = platform.x + platform.width;
+                    this.velocityX = 0;
+                }
+            }
+        });
+        
+        // Keep player in horizontal bounds
+        if (this.x < 0) {
+            this.x = 0;
+            this.velocityX = 0;
+        }
+        if (this.x + this.width > 800) {
+            this.x = 800 - this.width;
+            this.velocityX = 0;
+        }
+    }
+    
+    handleVerticalCollisions(platforms, hazards, spikes, prevY) {
         this.onGround = false;
         
         platforms.forEach(platform => {
@@ -93,27 +125,17 @@ class Player {
                     return;
                 }
                 
-                // Landing on top of platform
-                if (this.velocityY > 0 && prevY + this.height <= platform.y) {
+                // Landing on top of platform (falling down)
+                if (this.velocityY > 0 && prevY + this.height <= platform.y + 5) { // Added 5px tolerance
                     this.y = platform.y - this.height;
                     this.velocityY = 0;
                     this.onGround = true;
                     this.jumpAnimation = 0;
                 }
-                // Hitting platform from below
-                else if (this.velocityY < 0 && prevY >= platform.y + platform.height) {
+                // Hitting platform from below (jumping up)
+                else if (this.velocityY < 0 && prevY >= platform.y + platform.height - 5) { // Added 5px tolerance
                     this.y = platform.y + platform.height;
-                    this.velocityY = 0;
-                }
-                // Hitting platform from left
-                else if (this.velocityX > 0 && prevX + this.width <= platform.x) {
-                    this.x = platform.x - this.width;
-                    this.velocityX = 0;
-                }
-                // Hitting platform from right
-                else if (this.velocityX < 0 && prevX >= platform.x + platform.width) {
-                    this.x = platform.x + platform.width;
-                    this.velocityX = 0;
+                    this.velocityY = 0; // Stop upward movement
                 }
             }
         });
@@ -125,15 +147,7 @@ class Player {
             }
         });
         
-        // Keep player in bounds
-        if (this.x < 0) {
-            this.x = 0;
-            this.velocityX = 0;
-        }
-        if (this.x + this.width > 800) {
-            this.x = 800 - this.width;
-            this.velocityX = 0;
-        }
+        // Keep player in vertical bounds
         if (this.y > 600) {
             this.respawn();
         }
@@ -184,7 +198,8 @@ class Player {
                 
                 ctx.restore();
                 
-                // Simple glow effect (optional - can be removed if causing issues)
+                // Simple glow effect
+                ctx.save();
                 if (this.type === 'fireboy') {
                     ctx.shadowColor = 'rgba(255, 100, 68, 0.5)';
                 } else {
@@ -197,6 +212,7 @@ class Player {
                 // Reset shadow for other elements
                 ctx.shadowColor = 'transparent';
                 ctx.shadowBlur = 0;
+                ctx.restore();
             } else {
                 // Fallback if image fails
                 this.renderFallback(ctx);
@@ -239,5 +255,11 @@ class Player {
         ctx.fillStyle = '#FFF';
         ctx.font = '10px Arial';
         ctx.fillText(this.type === 'fireboy' ? 'F' : 'W', this.x + 12, this.y - 5);
+        
+        // Debug: Show if on ground
+        if (this.onGround) {
+            ctx.fillStyle = '#00FF00';
+            ctx.fillRect(this.x + this.width - 5, this.y - 5, 5, 5);
+        }
     }
 }

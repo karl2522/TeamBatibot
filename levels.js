@@ -153,7 +153,7 @@ class LevelManager {
                 { x: 150, y: 440, width: 20, height: 10 },
                 { x: 630, y: 440, width: 20, height: 10 },
                 { x: 250, y: 340, width: 20, height: 10 },
-                { x: 530, y: 340, width: 20, height: 10 },
+                { x: 530, y: 340, width: 20, height: 10 },  
             ],
         }
     };
