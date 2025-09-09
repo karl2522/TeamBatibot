@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fireboy & Watergirl - Level Designer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #2C3E50;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .designer-container {
+            display: flex;
+            gap: 20px;
+        }
+        .canvas-area {
+            flex: 1;
+        }
+        #designCanvas {
+            border: 2px solid #fff;
+            background: #34495E;
+            cursor: crosshair;
+        }
+        .controls {
+            width: 300px;
+            background: #34495E;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .tool-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #2C3E50;
+            border-radius: 5px;
+        }
+        .tool-group h3 {
+            margin: 0 0 10px 0;
+            color: #3498DB;
+        }
+        .tool-button {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #3498DB;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .tool-button:hover {
+            background: #2980B9;
+        }
+        .tool-button.active {
+            background: #E74C3C;
+        }
+        .output-area {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2C3E50;
+            border-radius: 5px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: #34495E;
+            color: white;
+            border: 1px solid #3498DB;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .grid-info {
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #BDC3C7;
+        }
+        .coordinates {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥💧 Fireboy & Watergirl Level Designer</h1>
+    
+    <div class="coordinates" id="coordinates">X: 0, Y: 0</div>
+    
+    <div class="designer-container">
+        <div class="canvas-area">
+            <div class="grid-info">
+                Grid: 20px squares | Canvas: 800x600 | Click to place, Right-click to remove
+            </div>
+            <canvas id="designCanvas" width="800" height="600"></canvas>
+        </div>
+        
+        <div class="controls">
+            <div class="tool-group">
+                <h3>🏗️ Platforms</h3>
+                <button class="tool-button" data-tool="stone">Stone Block</button>
+                <button class="tool-button" data-tool="moving">Moving Platform</button>
+                <button class="tool-button" data-tool="wall">Wall</button>
+            </div>
+            
+            <div class="tool-group">
+                <h3>⚠️ Hazards</h3>
+                <button class="tool-button" data-tool="lava">Lava</button>
+                <button class="tool-button" data-tool="water">Water</button>
+                <button class="tool-button" data-tool="acid">Acid</button>
+                <button class="tool-button" data-tool="spike">Spikes</button>
+            </div>
+            
+            <div class="tool-group">
+                <h3>💎 Collectibles</h3>
+                <button class="tool-button" data-tool="fire_gem">Fire Gem</button>
+                <button class="tool-button" data-tool="water_gem">Water Gem</button>
+                <button class="tool-button" data-tool="special_gem">Special Gem</button>
+            </div>
+            
+            <div class="tool-group">
+                <h3>🎯 Goals & Players</h3>
+                <button class="tool-button" data-tool="fire_goal">Fire Goal</button>
+                <button class="tool-button" data-tool="water_goal">Water Goal</button>
+                <button class="tool-button" data-tool="fireboy_start">Fireboy Start</button>
+                <button class="tool-button" data-tool="watergirl_start">Watergirl Start</button>
+            </div>
+            
+            <div class="tool-group">
+                <h3>🛠️ Tools</h3>
+                <button class="tool-button" onclick="clearCanvas()">Clear All</button>
+                <button class="tool-button" onclick="loadCurrentLevel()">Load Level 1</button>
+                <button class="tool-button" onclick="generateCode()">Generate Code</button>
+            </div>
+            
+            <div class="output-area">
+                <h3>📋 Generated Code</h3>
+                <textarea id="output" placeholder="Generated level code will appear here..."></textarea>
+                <button class="tool-button" onclick="copyToClipboard()">Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Level Designer Script
+        const canvas = document.getElementById('designCanvas');
+        const ctx = canvas.getContext('2d');
+        const output = document.getElementById('output');
+        const coordinates = document.getElementById('coordinates');
+        
+        let currentTool = 'stone';
+        let levelObjects = [];
+        let gridSize = 20;
+        let isDrawing = false;
+        
+        // Tool selection
+        document.querySelectorAll('.tool-button[data-tool]').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.tool-button[data-tool]').forEach(b => b.classList.remove('active'));
+                button.classList.add('active');
+                currentTool = button.dataset.tool;
+            });
+        });
+        
+        // Set default tool
+        document.querySelector('.tool-button[data-tool="stone"]').classList.add('active');
+        
+        // Mouse events
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('contextmenu', removeObject);
+        canvas.addEventListener('mousemove', updateCoordinates);
+        
+        function startDrawing(e) {
+            if (e.button === 0) { // Left click
+                isDrawing = true;
+                placeObject(e);
+            }
+        }
+        
+        function draw(e) {
+            if (isDrawing && (currentTool === 'stone' || currentTool === 'wall')) {
+                placeObject(e);
+            }
+        }
+        
+        function stopDrawing() {
+            isDrawing = false;
+        }
+        
+        function updateCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / gridSize) * gridSize;
+            const y = Math.floor((e.clientY - rect.top) / gridSize) * gridSize;
+            coordinates.textContent = `X: ${x}, Y: ${y}`;
+        }
+        
+        function placeObject(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / gridSize) * gridSize;
+            const y = Math.floor((e.clientY - rect.top) / gridSize) * gridSize;
+            
+            // Remove existing object at this position
+            levelObjects = levelObjects.filter(obj => !(obj.x === x && obj.y === y));
+            
+            // Add new object
+            const newObject = {
+                x: x,
+                y: y,
+                type: currentTool,
+                width: getDefaultWidth(currentTool),
+                height: getDefaultHeight(currentTool)
+            };
+            
+            levelObjects.push(newObject);
+            renderCanvas();
+        }
+        
+        function removeObject(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / gridSize) * gridSize;
+            const y = Math.floor((e.clientY - rect.top) / gridSize) * gridSize;
+            
+            levelObjects = levelObjects.filter(obj => !(obj.x === x && obj.y === y));
+            renderCanvas();
+        }
+        
+        function getDefaultWidth(type) {
+            switch(type) {
+                case 'stone': case 'moving': case 'wall': return 100;
+                case 'lava': case 'water': case 'acid': return 80;
+                case 'spike': return 20;
+                case 'fire_goal': case 'water_goal': return 30;
+                case 'fireboy_start': case 'watergirl_start': return 30;
+                default: return 20; // gems
+            }
+        }
+        
+        function getDefaultHeight(type) {
+            switch(type) {
+                case 'stone': case 'moving': return 30;
+                case 'wall': return 100;
+                case 'lava': case 'water': case 'acid': return 20;
+                case 'spike': return 10;
+                case 'fire_goal': case 'water_goal': return 30;
+                case 'fireboy_start': case 'watergirl_start': return 40;
+                default: return 20; // gems
+            }
+        }
+        
+        function renderCanvas() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Draw objects
+            levelObjects.forEach(obj => {
+                drawObject(obj);
+            });
+        }
+        
+        function drawObject(obj) {
+            switch(obj.type) {
+                case 'stone':
+                    ctx.fillStyle = '#8B9DC3';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.strokeStyle = '#6B7DA3';
+                    ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#000';
+                    ctx.font = '10px Arial';
+                    ctx.fillText('STONE', obj.x + 5, obj.y + 15);
+                    break;
+                case 'wall':
+                    ctx.fillStyle = '#5D6D7E';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.strokeStyle = '#34495E';
+                    ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial';
+                    ctx.fillText('WALL', obj.x + 5, obj.y + 15);
+                    break;
+                case 'moving':
+                    ctx.fillStyle = '#F39C12';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.strokeStyle = '#E67E22';
+                    ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#000';
+                    ctx.font = '10px Arial';
+                    ctx.fillText('MOVING', obj.x + 5, obj.y + 15);
+                    break;
+                case 'lava':
+                    ctx.fillStyle = '#E74C3C';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial';
+                    ctx.fillText('LAVA', obj.x + 5, obj.y + 15);
+                    break;
+                case 'water':
+                    ctx.fillStyle = '#3498DB';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial';
+                    ctx.fillText('WATER', obj.x + 5, obj.y + 15);
+                    break;
+                case 'acid':
+                    ctx.fillStyle = '#9B59B6';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial';
+                    ctx.fillText('ACID', obj.x + 5, obj.y + 15);
+                    break;
+                case 'spike':
+                    ctx.fillStyle = '#7F8C8D';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '8px Arial';
+                    ctx.fillText('S', obj.x + 5, obj.y + 8);
+                    break;
+                case 'fire_gem':
+                    ctx.fillStyle = '#E74C3C';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial';
+                    ctx.fillText('🔥', obj.x + 5, obj.y + 15);
+                    break;
+                case 'water_gem':
+                    ctx.fillStyle = '#3498DB';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial';
+                    ctx.fillText('💧', obj.x + 5, obj.y + 15);
+                    break;
+                case 'special_gem':
+                    ctx.fillStyle = '#9B59B6';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial';
+                    ctx.fillText('⭐', obj.x + 5, obj.y + 15);
+                    break;
+                case 'fire_goal':
+                    ctx.fillStyle = '#E74C3C';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.strokeStyle = '#C0392B';
+                    ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial';
+                    ctx.fillText('F', obj.x + 10, obj.y + 20);
+                    break;
+                case 'water_goal':
+                    ctx.fillStyle = '#3498DB';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.strokeStyle = '#2980B9';
+                    ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial';
+                    ctx.fillText('W', obj.x + 10, obj.y + 20);
+                    break;
+                case 'fireboy_start':
+                    ctx.fillStyle = '#FF6B6B';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '8px Arial';
+                    ctx.fillText('FB', obj.x + 8, obj.y + 20);
+                    break;
+                case 'watergirl_start':
+                    ctx.fillStyle = '#74B9FF';
+                    ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '8px Arial';
+                    ctx.fillText('WG', obj.x + 8, obj.y + 20);
+                    break;
+            }
+        }
+        
+        function clearCanvas() {
+            levelObjects = [];
+            renderCanvas();
+            output.value = '';
+        }
+        
+        function loadCurrentLevel() {
+            // Load level 1 data for reference
+            levelObjects = [
+                { x: 0, y: 550, width: 200, height: 50, type: 'stone' },
+                { x: 250, y: 550, width: 300, height: 50, type: 'stone' },
+                { x: 600, y: 550, width: 200, height: 50, type: 'stone' },
+                { x: 200, y: 530, width: 50, height: 20, type: 'lava' },
+                { x: 550, y: 530, width: 50, height: 20, type: 'water' },
+                { x: 120, y: 420, width: 20, height: 20, type: 'fire_gem' },
+                { x: 320, y: 370, width: 20, height: 20, type: 'water_gem' },
+                { x: 670, y: 170, width: 30, height: 30, type: 'fire_goal' },
+                { x: 720, y: 170, width: 30, height: 30, type: 'water_goal' },
+            ];
+            renderCanvas();
+        }
+        
+        function generateCode() {
+            const platforms = levelObjects.filter(obj => ['stone', 'wall', 'moving', 'lava', 'water', 'acid'].includes(obj.type));
+            const collectibles = levelObjects.filter(obj => ['fire_gem', 'water_gem', 'special_gem'].includes(obj.type));
+            const goals = levelObjects.filter(obj => ['fire_goal', 'water_goal'].includes(obj.type));
+            const spikes = levelObjects.filter(obj => obj.type === 'spike');
+            
+            let code = `{
+    name: "Custom Level",
+    platforms: [`;
+            
+            platforms.forEach(p => {
+                code += `\n        { x: ${p.x}, y: ${p.y}, width: ${p.width}, height: ${p.height}, type: '${p.type}' },`;
+            });
+            
+            code += `\n    ],
+    collectibles: [`;
+            
+            collectibles.forEach(c => {
+                const type = c.type;
+                code += `\n        { x: ${c.x}, y: ${c.y}, type: '${type}' },`;
+            });
+            
+            code += `\n    ],
+    goals: [`;
+            
+            goals.forEach(g => {
+                const type = g.type === 'fire_goal' ? 'fire' : 'water';
+                code += `\n        { x: ${g.x}, y: ${g.y}, width: ${g.width}, height: ${g.height}, type: '${type}' },`;
+            });
+            
+            code += `\n    ],
+    spikes: [`;
+            
+            spikes.forEach(s => {
+                code += `\n        { x: ${s.x}, y: ${s.y}, width: ${s.width}, height: ${s.height} },`;
+            });
+            
+            code += `\n    ]
+}`;
+            
+            output.value = code;
+        }
+        
+        function copyToClipboard() {
+            output.select();
+            document.execCommand('copy');
+            alert('Code copied to clipboard!');
+        }
+        
+        // Initial render
+        renderCanvas();
+    </script>
+</body>
+</html>
