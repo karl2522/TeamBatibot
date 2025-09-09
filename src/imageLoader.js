@@ -7,7 +7,9 @@ class ImageLoader {
         const imageDefs = [
             { name: 'fireboy', srcs: ['assets/images/fireboy.png', '../assets/images/fireboy.png', './assets/images/fireboy.png'] },
             { name: 'watergirl', srcs: ['assets/images/watergirl.png', '../assets/images/watergirl.png', './assets/images/watergirl.png'] },
-            { name: 'game-bg', srcs: ['assets/images/game-bg.jpg', '../assets/images/game-bg.jpg', './assets/images/game-bg.jpg'] }
+            { name: 'game-bg', srcs: ['assets/images/game-bg.jpg', '../assets/images/game-bg.jpg', './assets/images/game-bg.jpg'] },
+            { name: 'crystal-orb', srcs: ['assets/images/crystal-orb.png', '../assets/images/crystal-orb.png', './assets/images/crystal-orb.png'] },
+            { name: 'laser-beam', srcs: ['assets/images/laser-beam.png', '../assets/images/laser-beam.png', './assets/images/laser-beam.png'] }
         ];
 
         const loadOne = (def) => new Promise((resolve) => {

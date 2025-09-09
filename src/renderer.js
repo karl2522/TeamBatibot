@@ -133,6 +133,22 @@ class PlatformRenderer {
             ctx.lineTo(x + 5, floatY + 5);
             ctx.closePath();
             ctx.fill();
+        } else if (type === 'crystal_orb') {
+            // Crystal orb power-up
+            const img = ImageLoader.getImage('crystal-orb');
+            if (img && img.complete && img.naturalWidth) {
+                ctx.drawImage(img, x, floatY, 20, 20);
+            } else {
+                // Fallback: glowing circle
+                ctx.fillStyle = '#88e0ff';
+                ctx.beginPath();
+                ctx.arc(x + 10, floatY + 10, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(136,224,255,0.35)';
+                ctx.beginPath();
+                ctx.arc(x + 10, floatY + 10, 14, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
     }
     
@@ -160,6 +176,57 @@ class PlatformRenderer {
             ctx.font = '20px Arial';
             ctx.fillText('💧', x + 5, y + 25);
         }
+    }
+
+    static drawLaser(ctx, laser, isActive) {
+        ctx.save();
+        const img = ImageLoader.getImage('laser-beam');
+        if (isActive) {
+            ctx.globalAlpha = 0.95;
+            ctx.fillStyle = '#ff2a2a';
+        } else {
+            ctx.globalAlpha = 0.25;
+            ctx.fillStyle = '#a33';
+        }
+        if (img && img.complete && img.naturalWidth) {
+            if (laser.orientation === 'horizontal') {
+                const tiles = Math.ceil(laser.width / 64);
+                for (let i = 0; i < tiles; i++) {
+                    const dw = Math.min(64, laser.width - i * 64);
+                    ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, laser.x + i * 64, laser.y, dw, laser.height);
+                }
+            } else {
+                const tiles = Math.ceil(laser.height / 64);
+                for (let i = 0; i < tiles; i++) {
+                    const dh = Math.min(64, laser.height - i * 64);
+                    ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, laser.x, laser.y + i * 64, laser.width, dh);
+                }
+            }
+        } else {
+            ctx.fillRect(laser.x, laser.y, laser.width, laser.height);
+        }
+        ctx.restore();
+    }
+
+    static drawElementInteraction(ctx, player, platform) {
+        // Visual splash/glow line at the liquid surface where player intersects
+        ctx.save();
+        const cx = player.x + player.width / 2;
+        const topY = platform.y;
+        const isLava = platform.type === 'lava';
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = isLava ? 'rgba(255,80,30,0.35)' : 'rgba(80,120,255,0.35)';
+        ctx.beginPath();
+        ctx.ellipse(cx, topY, 18, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 0.9;
+        ctx.strokeStyle = isLava ? '#ffb199' : '#b1c9ff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(player.x, topY);
+        ctx.lineTo(player.x + player.width, topY);
+        ctx.stroke();
+        ctx.restore();
     }
 }
 

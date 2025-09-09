@@ -73,6 +73,10 @@ class Game {
         this.collectibles = [...this.levelData.collectibles];
         this.goals = this.levelData.goals;
         this.spikes = this.levelData.spikes || [];
+        this.lasers = this.levelData.lasers || [];
+
+        // Power-up state
+        this.immunityUntil = { fireboy: 0, watergirl: 0 };
         
         this.setupControls();
         this.gameLoop();
@@ -107,6 +111,15 @@ class Game {
         
         // Update moving platforms
         this.updateMovingPlatforms();
+
+        // Update lasers active state based on timers
+        const now = performance.now();
+        this.lasers.forEach(l => {
+            if (!l.__start) l.__start = now + (l.phaseMs || 0);
+            const cycle = (l.onMs || 1000) + (l.offMs || 1000);
+            const t = (now - l.__start) % cycle;
+            l.__active = t < (l.onMs || 1000);
+        });
         
         // Calculate movement deltas and move players on platforms
         this.platforms.forEach((platform, index) => {
@@ -121,8 +134,19 @@ class Game {
         });
         
         // Update players
-        this.fireboy.update(this.keys, this.platforms, ['water', 'acid'], this.spikes);
-        this.watergirl.update(this.keys, this.platforms, ['lava', 'acid'], this.spikes);
+        const hazardsForFire = this.isImmune('fireboy') ? [] : ['water', 'acid'];
+        const hazardsForWater = this.isImmune('watergirl') ? [] : ['lava', 'acid'];
+        const spikesForFire = this.isImmune('fireboy') ? [] : this.spikes;
+        const spikesForWater = this.isImmune('watergirl') ? [] : this.spikes;
+        this.fireboy.update(this.keys, this.platforms, hazardsForFire, spikesForFire);
+        this.watergirl.update(this.keys, this.platforms, hazardsForWater, spikesForWater);
+
+        // Laser collisions (skip if immune)
+        this.lasers.forEach(l => {
+            if (!l.__active) return;
+            if (!this.isImmune('fireboy') && this.checkCollision(this.fireboy, l)) this.fireboy.respawn();
+            if (!this.isImmune('watergirl') && this.checkCollision(this.watergirl, l)) this.watergirl.respawn();
+        });
         
         // Check collectibles
         this.checkCollectibles();
@@ -202,8 +226,22 @@ class Game {
                     return false;
                 }
             }
+            if (collectible.type === 'crystal_orb') {
+                const orbHit = this.checkCollision(this.fireboy, collectible) || this.checkCollision(this.watergirl, collectible);
+                if (orbHit) {
+                    const now = performance.now();
+                    const duration = 6000; // 6 seconds of immunity
+                    this.immunityUntil.fireboy = Math.max(this.immunityUntil.fireboy, now + duration);
+                    this.immunityUntil.watergirl = Math.max(this.immunityUntil.watergirl, now + duration);
+                    return false;
+                }
+            }
             return true;
         });
+    }
+
+    isImmune(playerType) {
+        return performance.now() < (this.immunityUntil[playerType] || 0);
     }
     
     checkWinCondition() {
@@ -291,6 +329,9 @@ class Game {
                     break;
             }
         });
+
+        // Draw lasers
+        this.lasers.forEach(l => PlatformRenderer.drawLaser(this.ctx, l, !!l.__active));
         
         // Draw spikes
         this.spikes.forEach(spike => {
@@ -311,6 +352,17 @@ class Game {
         this.fireboy.render(this.ctx);
         this.watergirl.render(this.ctx);
 
+        // Liquid interaction visuals
+        const renderSplash = (player, type) => {
+            this.platforms.forEach(p => {
+                if (p.type !== type) return;
+                const intersects = player.x + player.width > p.x && player.x < p.x + p.width && player.y + player.height > p.y && player.y < p.y + p.height;
+                if (intersects) PlatformRenderer.drawElementInteraction(this.ctx, player, p);
+            });
+        };
+        renderSplash(this.fireboy, 'lava');
+        renderSplash(this.watergirl, 'water');
+
         // Draw UI within world space so it scales consistently
         this.drawUI();
 
@@ -325,6 +377,10 @@ class Game {
         this.ctx.font = "20px 'New Rocker', Arial";
         this.ctx.fillText(`Level ${this.currentLevel}: ${this.levelData.name}`, 20, 30);
         this.ctx.fillText(`Gems: ${this.collectibles.length}`, 20, 60);
+        if (this.isImmune('fireboy') || this.isImmune('watergirl')) {
+            const remain = Math.ceil(Math.max(this.immunityUntil.fireboy, this.immunityUntil.watergirl) - performance.now()) / 1000;
+            this.ctx.fillText(`Crystal Orb: ${Math.max(0, remain).toFixed(1)}s`, 20, 90);
+        }
         
         this.ctx.font = "14px 'New Rocker', Arial";
         this.ctx.fillText('Fireboy: Arrow Keys | Watergirl: WASD', 20, this.baseHeight - 20);

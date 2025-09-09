@@ -2,54 +2,55 @@
 class LevelManager {
     static levels = {
         1: {
-            name: "Temple Entrance",
+            name: "Easy - Training Grounds",
             platforms: [
-                // Main ground platforms (stone texture)
-                { x: 0, y: 550, width: 200, height: 50, type: 'stone' },
-                { x: 250, y: 550, width: 300, height: 50, type: 'stone' },
-                { x: 600, y: 550, width: 200, height: 50, type: 'stone' },
-                // Extended right-side ground to match 1200px world width
-                { x: 800, y: 550, width: 400, height: 50, type: 'stone' },
-                
-                // Multi-level stone platforms
-                { x: 100, y: 450, width: 150, height: 30, type: 'stone' },
-                { x: 300, y: 400, width: 200, height: 30, type: 'stone' },
-                { x: 550, y: 350, width: 150, height: 30, type: 'stone' },
-                
-                // Upper level complex platforms
-                { x: 0, y: 300, width: 100, height: 30, type: 'stone' },
-                { x: 150, y: 250, width: 100, height: 30, type: 'stone' },
-                { x: 300, y: 200, width: 150, height: 30, type: 'stone' },
-                { x: 500, y: 150, width: 100, height: 30, type: 'stone' },
-                { x: 650, y: 200, width: 150, height: 30, type: 'stone' },
-                
-                // Hazard zones
-                { x: 200, y: 530, width: 50, height: 20, type: 'lava' },
-                { x: 550, y: 530, width: 50, height: 20, type: 'water' },
-                
-                // Moving platforms
-                { x: 400, y: 300, width: 80, height: 20, type: 'moving', moveX: true, range: 100, speed: 1 },
-                
-                // Walls (for more complex navigation)
+                // Ground (grid-aligned 40px multiples)
+                { x: 0, y: 550, width: 240, height: 50, type: 'stone' },
+                // Lava pool gap
+                { x: 240, y: 550, width: 0, height: 0, type: 'stone' },
+                { x: 400, y: 550, width: 160, height: 50, type: 'stone' },
+                // Water pool gap
+                { x: 560, y: 550, width: 0, height: 0, type: 'stone' },
+                { x: 720, y: 550, width: 260, height: 50, type: 'stone' },
+                { x: 1020, y: 550, width: 180, height: 50, type: 'stone' },
+
+                // Pools (20px deep so characters visually sink slightly)
+                { x: 240, y: 530, width: 160, height: 20, type: 'lava' },
+                { x: 560, y: 530, width: 160, height: 20, type: 'water' },
+
+                // Simple steps and islands
+                { x: 80, y: 470, width: 120, height: 30, type: 'stone' },
+                { x: 360, y: 460, width: 120, height: 30, type: 'stone' },
+                { x: 640, y: 460, width: 120, height: 30, type: 'stone' },
+                { x: 900, y: 420, width: 140, height: 30, type: 'stone' },
+                { x: 1080, y: 360, width: 80, height: 30, type: 'stone' },
+
+                // Moving platforms (timed)
+                { x: 480, y: 420, width: 80, height: 20, type: 'moving', moveX: true, range: 120, speed: 1.2 },
+                { x: 840, y: 320, width: 80, height: 20, type: 'moving', moveY: true, range: 100, speed: 1 },
+
+                // Boundary walls and bottom frame
                 { x: 0, y: 0, width: 20, height: 600, type: 'wall' },
                 { x: 1180, y: 0, width: 20, height: 600, type: 'wall' },
-                // Bottom frame (collidable floor) spanning entire width
                 { x: 0, y: 580, width: 1200, height: 20, type: 'stone' },
             ],
             collectibles: [
-                { x: 120, y: 420, type: 'fire_gem' },
-                { x: 320, y: 370, type: 'water_gem' },
-                { x: 170, y: 220, type: 'fire_gem' },
-                { x: 520, y: 120, type: 'water_gem' },
+                { x: 120, y: 440, type: 'fire_gem' },
+                { x: 380, y: 430, type: 'water_gem' },
+                // Crystal orb power-up moved near left lava (circled spot)
+                { x: 300, y: 480, type: 'crystal_orb' },
             ],
             goals: [
-                { x: 670, y: 170, width: 30, height: 30, type: 'fire' },
-                { x: 720, y: 170, width: 30, height: 30, type: 'water' }
+                { x: 1085, y: 330, width: 30, height: 30, type: 'fire' },
+                { x: 1130, y: 330, width: 30, height: 30, type: 'water' }
             ],
             spikes: [
-                { x: 250, y: 540, width: 20, height: 10 },
-                { x: 450, y: 390, width: 20, height: 10 },
-                { x: 600, y: 540, width: 20, height: 10 },
+                { x: 720, y: 540, width: 40, height: 10 },
+                { x: 980, y: 540, width: 40, height: 10 },
+            ],
+            lasers: [
+                // Horizontal laser over the center corridor
+                { x: 440, y: 500, width: 240, height: 6, orientation: 'horizontal', onMs: 900, offMs: 700, phaseMs: 0 }
             ]
         },
         
