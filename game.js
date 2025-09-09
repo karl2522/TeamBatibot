@@ -1,6 +1,6 @@
 // Main Game Class - Controls the entire game
 class Game {
-    constructor() {
+    constructor(options = {}) {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.width = this.canvas.width;
@@ -11,7 +11,7 @@ class Game {
         
         // Load images first, then start game
         ImageLoader.loadImages().then(() => {
-            this.initializeGame();
+            this.initializeGame(options);
         });
     }
     
@@ -31,10 +31,10 @@ class Game {
         this.ctx.textAlign = 'left';
     }
     
-    initializeGame() {
+    initializeGame(options = {}) {
         // Game state
         this.keys = {};
-        this.currentLevel = 1;
+        this.currentLevel = options.startLevel || 1;
         this.levelData = LevelManager.getCurrentLevel(this.currentLevel);
         
         // Initialize players
@@ -241,7 +241,7 @@ class Game {
     }
 }
 
-// Start the game when page loads
-window.addEventListener('load', () => {
-    new Game();
-});
+// Export a start function so menu can control when to start
+window.startGame = function(startLevel = 1) {
+    new Game({ startLevel });
+};
