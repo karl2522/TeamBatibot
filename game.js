@@ -1,4 +1,4 @@
-// Main Game Class - Controls the entire game
+// Main Game Class - Controls the entire game with FIXED moving platform physics
 class Game {
     constructor(options = {}) {
         this.canvas = document.getElementById('gameCanvas');
@@ -64,8 +64,34 @@ class Game {
     }
     
     update() {
+        // Store platform movements BEFORE updating them
+        const platformMovements = new Map();
+        
+        // Calculate how much each moving platform will move
+        this.platforms.forEach((platform, index) => {
+            if (platform.type === 'moving') {
+                const oldX = platform.x;
+                const oldY = platform.y;
+                
+                // Store the old position
+                platformMovements.set(index, { oldX, oldY });
+            }
+        });
+        
         // Update moving platforms
         this.updateMovingPlatforms();
+        
+        // Calculate movement deltas and move players on platforms
+        this.platforms.forEach((platform, index) => {
+            if (platform.type === 'moving' && platformMovements.has(index)) {
+                const { oldX, oldY } = platformMovements.get(index);
+                const deltaX = platform.x - oldX;
+                const deltaY = platform.y - oldY;
+                
+                // Move players that are standing on this platform
+                this.movePlayersOnPlatform(platform, deltaX, deltaY);
+            }
+        });
         
         // Update players
         this.fireboy.update(this.keys, this.platforms, ['water', 'acid'], this.spikes);
@@ -76,6 +102,37 @@ class Game {
         
         // Check win condition
         this.checkWinCondition();
+    }
+    
+    // NEW: Move players that are standing on a moving platform
+    movePlayersOnPlatform(platform, deltaX, deltaY) {
+        // Check if fireboy is on this platform
+        if (this.isPlayerOnPlatform(this.fireboy, platform)) {
+            this.fireboy.x += deltaX;
+            this.fireboy.y += deltaY;
+        }
+        
+        // Check if watergirl is on this platform
+        if (this.isPlayerOnPlatform(this.watergirl, platform)) {
+            this.watergirl.x += deltaX;
+            this.watergirl.y += deltaY;
+        }
+    }
+    
+    // NEW: Check if a player is standing on top of a platform
+    isPlayerOnPlatform(player, platform) {
+        const tolerance = 5; // Allow some margin for error
+        
+        // Check if player is horizontally overlapping with platform
+        const horizontalOverlap = player.x < platform.x + platform.width && 
+                                 player.x + player.width > platform.x;
+        
+        // Check if player is standing on top of platform (within tolerance)
+        const standingOnTop = player.y + player.height >= platform.y - tolerance && 
+                             player.y + player.height <= platform.y + tolerance;
+        
+        // Player must be on ground and overlapping horizontally
+        return horizontalOverlap && standingOnTop && player.onGround;
     }
     
     updateMovingPlatforms() {
@@ -186,6 +243,16 @@ class Game {
                     // Add moving indicator (yellow dot)
                     this.ctx.fillStyle = '#FFFF00';
                     this.ctx.fillRect(platform.x + 5, platform.y + 5, 10, 10);
+                    
+                    // Add directional arrow to show movement
+                    this.ctx.fillStyle = '#FF0000';
+                    this.ctx.font = '12px Arial';
+                    if (platform.moveX) {
+                        this.ctx.fillText(platform.direction > 0 ? '→' : '←', platform.x + platform.width/2 - 6, platform.y + platform.height/2 + 4);
+                    }
+                    if (platform.moveY) {
+                        this.ctx.fillText(platform.direction > 0 ? '↓' : '↑', platform.x + platform.width/2 - 6, platform.y + platform.height/2 + 4);
+                    }
                     break;
                 case 'acid':
                     this.ctx.fillStyle = '#AA44AA';
