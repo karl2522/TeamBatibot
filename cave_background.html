@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystical Cave Background</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        canvas {
+            display: block;
+            background: #000;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 12px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <div>Mystical Cave Background</div>
+        <div>Press SPACE to toggle animation</div>
+    </div>
+    <canvas id="caveCanvas"></canvas>
+
+    <script>
+        class CaveBackground {
+            constructor() {
+                this.canvas = document.getElementById('caveCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.animationId = null;
+                this.animated = true;
+                this.time = 0;
+                
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.draw();
+            }
+            
+            setupCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                
+                window.addEventListener('resize', () => {
+                    this.canvas.width = window.innerWidth;
+                    this.canvas.height = window.innerHeight;
+                });
+            }
+            
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.animated = !this.animated;
+                        if (this.animated) {
+                            this.animate();
+                        } else {
+                            cancelAnimationFrame(this.animationId);
+                        }
+                    }
+                });
+            }
+            
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw background layers for depth
+                this.drawBackgroundLayers();
+                
+                // Draw cave walls
+                this.drawCaveWalls();
+                
+                // Draw lava streams (left side)
+                this.drawLavaStreams();
+                
+                // Draw waterfalls (right side)
+                this.drawWaterfalls();
+                
+                // Draw embedded crystals
+                this.drawCrystals();
+                
+                // Draw atmospheric effects
+                this.drawAtmosphericEffects();
+                
+                if (this.animated) {
+                    this.animate();
+                }
+            }
+            
+            drawBackgroundLayers() {
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                gradient.addColorStop(0, '#0a0a0a');
+                gradient.addColorStop(0.3, '#1a1a2e');
+                gradient.addColorStop(0.7, '#16213e');
+                gradient.addColorStop(1, '#0f0f0f');
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            
+            drawCaveWalls() {
+                // Left wall
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, 0);
+                this.ctx.lineTo(this.canvas.width * 0.3, 0);
+                this.ctx.lineTo(this.canvas.width * 0.25, this.canvas.height);
+                this.ctx.lineTo(0, this.canvas.height);
+                this.ctx.closePath();
+                
+                const leftGradient = this.ctx.createLinearGradient(0, 0, this.canvas.width * 0.3, 0);
+                leftGradient.addColorStop(0, '#2a2a2a');
+                leftGradient.addColorStop(0.5, '#3a3a3a');
+                leftGradient.addColorStop(1, '#1a1a1a');
+                
+                this.ctx.fillStyle = leftGradient;
+                this.ctx.fill();
+                
+                // Add rock texture to left wall
+                this.addRockTexture(0, 0, this.canvas.width * 0.3, this.canvas.height, '#4a4a4a');
+                
+                // Right wall
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.canvas.width * 0.7, 0);
+                this.ctx.lineTo(this.canvas.width, 0);
+                this.ctx.lineTo(this.canvas.width, this.canvas.height);
+                this.ctx.lineTo(this.canvas.width * 0.75, this.canvas.height);
+                this.ctx.closePath();
+                
+                const rightGradient = this.ctx.createLinearGradient(this.canvas.width * 0.7, 0, this.canvas.width, 0);
+                rightGradient.addColorStop(0, '#1a1a1a');
+                rightGradient.addColorStop(0.5, '#3a3a3a');
+                rightGradient.addColorStop(1, '#2a2a2a');
+                
+                this.ctx.fillStyle = rightGradient;
+                this.ctx.fill();
+                
+                // Add rock texture to right wall
+                this.addRockTexture(this.canvas.width * 0.7, 0, this.canvas.width * 0.3, this.canvas.height, '#4a4a4a');
+                
+                this.ctx.restore();
+            }
+            
+            addRockTexture(x, y, width, height, color) {
+                this.ctx.save();
+                this.ctx.globalAlpha = 0.3;
+                this.ctx.fillStyle = color;
+                
+                for (let i = 0; i < 200; i++) {
+                    const rockX = x + Math.random() * width;
+                    const rockY = y + Math.random() * height;
+                    const rockSize = Math.random() * 8 + 2;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(rockX, rockY, rockSize, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                
+                this.ctx.restore();
+            }
+            
+            drawLavaStreams() {
+                const lavaX = this.canvas.width * 0.05;
+                const streamWidth = this.canvas.width * 0.15;
+                
+                // Main lava stream
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.moveTo(lavaX, 0);
+                this.ctx.lineTo(lavaX + streamWidth, 0);
+                this.ctx.lineTo(lavaX + streamWidth * 0.8, this.canvas.height);
+                this.ctx.lineTo(lavaX + streamWidth * 0.2, this.canvas.height);
+                this.ctx.closePath();
+                
+                const lavaGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                lavaGradient.addColorStop(0, '#ff4500');
+                lavaGradient.addColorStop(0.3, '#ff6b35');
+                lavaGradient.addColorStop(0.6, '#ff8c42');
+                lavaGradient.addColorStop(1, '#ffa500');
+                
+                this.ctx.fillStyle = lavaGradient;
+                this.ctx.fill();
+                
+                // Add lava glow effect
+                this.ctx.shadowColor = '#ff4500';
+                this.ctx.shadowBlur = 20;
+                this.ctx.fill();
+                
+                // Add flowing lava particles
+                this.drawLavaParticles(lavaX, streamWidth);
+                
+                this.ctx.restore();
+            }
+            
+            drawLavaParticles(x, width) {
+                this.ctx.save();
+                this.ctx.globalAlpha = 0.7;
+                
+                for (let i = 0; i < 50; i++) {
+                    const particleX = x + Math.random() * width;
+                    const particleY = (this.time * 0.1 + Math.random() * this.canvas.height) % this.canvas.height;
+                    const particleSize = Math.random() * 3 + 1;
+                    
+                    this.ctx.fillStyle = `hsl(${15 + Math.random() * 10}, 100%, ${50 + Math.random() * 30}%)`;
+                    this.ctx.shadowColor = '#ff4500';
+                    this.ctx.shadowBlur = 5;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                
+                this.ctx.restore();
+            }
+            
+            drawWaterfalls() {
+                const waterX = this.canvas.width * 0.8;
+                const streamWidth = this.canvas.width * 0.15;
+                
+                // Main waterfall
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.moveTo(waterX, 0);
+                this.ctx.lineTo(waterX + streamWidth, 0);
+                this.ctx.lineTo(waterX + streamWidth * 0.8, this.canvas.height);
+                this.ctx.lineTo(waterX + streamWidth * 0.2, this.canvas.height);
+                this.ctx.closePath();
+                
+                const waterGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                waterGradient.addColorStop(0, '#00bfff');
+                waterGradient.addColorStop(0.3, '#1e90ff');
+                waterGradient.addColorStop(0.6, '#4169e1');
+                waterGradient.addColorStop(1, '#0000cd');
+                
+                this.ctx.fillStyle = waterGradient;
+                this.ctx.fill();
+                
+                // Add water glow effect
+                this.ctx.shadowColor = '#00bfff';
+                this.ctx.shadowBlur = 20;
+                this.ctx.fill();
+                
+                // Add flowing water particles
+                this.drawWaterParticles(waterX, streamWidth);
+                
+                this.ctx.restore();
+            }
+            
+            drawWaterParticles(x, width) {
+                this.ctx.save();
+                this.ctx.globalAlpha = 0.6;
+                
+                for (let i = 0; i < 60; i++) {
+                    const particleX = x + Math.random() * width;
+                    const particleY = (this.time * 0.15 + Math.random() * this.canvas.height) % this.canvas.height;
+                    const particleSize = Math.random() * 2 + 0.5;
+                    
+                    this.ctx.fillStyle = `hsl(${200 + Math.random() * 20}, 100%, ${60 + Math.random() * 30}%)`;
+                    this.ctx.shadowColor = '#00bfff';
+                    this.ctx.shadowBlur = 3;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                
+                this.ctx.restore();
+            }
+            
+            drawCrystals() {
+                this.ctx.save();
+                
+                // Left side crystals
+                for (let i = 0; i < 8; i++) {
+                    const x = Math.random() * this.canvas.width * 0.25 + 10;
+                    const y = Math.random() * this.canvas.height;
+                    this.drawCrystal(x, y, '#ff6b6b', 0.4);
+                }
+                
+                // Right side crystals
+                for (let i = 0; i < 8; i++) {
+                    const x = this.canvas.width * 0.75 + Math.random() * this.canvas.width * 0.25 - 10;
+                    const y = Math.random() * this.canvas.height;
+                    this.drawCrystal(x, y, '#4ecdc4', 0.4);
+                }
+                
+                this.ctx.restore();
+            }
+            
+            drawCrystal(x, y, color, alpha) {
+                this.ctx.save();
+                this.ctx.globalAlpha = alpha + Math.sin(this.time * 0.005 + x + y) * 0.2;
+                this.ctx.fillStyle = color;
+                this.ctx.shadowColor = color;
+                this.ctx.shadowBlur = 8;
+                
+                const size = 3 + Math.random() * 4;
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, y - size);
+                this.ctx.lineTo(x + size * 0.6, y);
+                this.ctx.lineTo(x, y + size);
+                this.ctx.lineTo(x - size * 0.6, y);
+                this.ctx.closePath();
+                this.ctx.fill();
+                
+                this.ctx.restore();
+            }
+            
+            drawAtmosphericEffects() {
+                // Add subtle fog/mist effect
+                this.ctx.save();
+                this.ctx.globalAlpha = 0.1;
+                this.ctx.fillStyle = '#ffffff';
+                
+                for (let i = 0; i < 30; i++) {
+                    const x = Math.random() * this.canvas.width;
+                    const y = Math.random() * this.canvas.height;
+                    const size = Math.random() * 100 + 50;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                
+                this.ctx.restore();
+            }
+            
+            animate() {
+                this.time++;
+                this.draw();
+                this.animationId = requestAnimationFrame(() => this.animate());
+            }
+        }
+        
+        // Initialize the background when the page loads
+        window.addEventListener('load', () => {
+            new CaveBackground();
+        });
+    </script>
+</body>
+</html>
