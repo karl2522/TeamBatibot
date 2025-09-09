@@ -149,6 +149,38 @@ class PlatformRenderer {
                 ctx.arc(x + 10, floatY + 10, 14, 0, Math.PI * 2);
                 ctx.fill();
             }
+        } else if (type === 'smoke_orb') {
+            // Smoke orb (semi-transparent gray)
+            const img = ImageLoader.getImage('smoke-orb');
+            if (img && img.complete && img.naturalWidth) {
+                ctx.globalAlpha = 0.85;
+                ctx.drawImage(img, x, floatY, 20, 20);
+                ctx.globalAlpha = 1;
+            } else {
+                ctx.fillStyle = 'rgba(160,160,160,0.7)';
+                ctx.beginPath();
+                ctx.arc(x + 10, floatY + 10, 8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        } else if (type === 'gravity_orb') {
+            // Gravity orb (green with arrow)
+            const img = ImageLoader.getImage('gravity-orb');
+            if (img && img.complete && img.naturalWidth) {
+                ctx.drawImage(img, x, floatY, 20, 20);
+            } else {
+                ctx.fillStyle = '#5cff7a';
+                ctx.beginPath();
+                ctx.arc(x + 10, floatY + 10, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#1b7a2c';
+                ctx.fillRect(x + 8, floatY + 6, 4, 8);
+                ctx.beginPath();
+                ctx.moveTo(x + 10, floatY + 4);
+                ctx.lineTo(x + 6, floatY + 8);
+                ctx.lineTo(x + 14, floatY + 8);
+                ctx.closePath();
+                ctx.fill();
+            }
         }
     }
     

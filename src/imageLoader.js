@@ -9,6 +9,8 @@ class ImageLoader {
             { name: 'watergirl', srcs: ['assets/images/watergirl.png', '../assets/images/watergirl.png', './assets/images/watergirl.png'] },
             { name: 'game-bg', srcs: ['assets/images/game-bg.jpg', '../assets/images/game-bg.jpg', './assets/images/game-bg.jpg'] },
             { name: 'crystal-orb', srcs: ['assets/images/crystal-orb.png', '../assets/images/crystal-orb.png', './assets/images/crystal-orb.png'] },
+            { name: 'smoke-orb', srcs: ['assets/images/smoke-orb.png', '../assets/images/smoke-orb.png', './assets/images/smoke-orb.png'] },
+            { name: 'gravity-orb', srcs: ['assets/images/gravity-orb.png', '../assets/images/gravity-orb.png', './assets/images/gravity-orb.png'] },
             { name: 'laser-beam', srcs: ['assets/images/laser-beam.png', '../assets/images/laser-beam.png', './assets/images/laser-beam.png'] }
         ];
 

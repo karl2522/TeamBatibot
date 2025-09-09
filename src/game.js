@@ -77,6 +77,8 @@ class Game {
 
         // Power-up state
         this.immunityUntil = { fireboy: 0, watergirl: 0 };
+        this.smokeUntil = { fireboy: 0, watergirl: 0 };
+        this.gravityFlippedUntil = { fireboy: 0, watergirl: 0 };
         
         this.setupControls();
         this.gameLoop();
@@ -136,16 +138,18 @@ class Game {
         // Update players
         const hazardsForFire = this.isImmune('fireboy') ? [] : ['water', 'acid'];
         const hazardsForWater = this.isImmune('watergirl') ? [] : ['lava', 'acid'];
-        const spikesForFire = this.isImmune('fireboy') ? [] : this.spikes;
-        const spikesForWater = this.isImmune('watergirl') ? [] : this.spikes;
-        this.fireboy.update(this.keys, this.platforms, hazardsForFire, spikesForFire);
-        this.watergirl.update(this.keys, this.platforms, hazardsForWater, spikesForWater);
+        const allowPhaseFire = this.isSmoked('fireboy');
+        const allowPhaseWater = this.isSmoked('watergirl');
+        const spikesForFire = (this.isImmune('fireboy') || allowPhaseFire) ? [] : this.spikes;
+        const spikesForWater = (this.isImmune('watergirl') || allowPhaseWater) ? [] : this.spikes;
+        this.fireboy.update(this.keys, this.getPhasePlatforms('fireboy'), hazardsForFire, spikesForFire, this.isGravityFlipped('fireboy'));
+        this.watergirl.update(this.keys, this.getPhasePlatforms('watergirl'), hazardsForWater, spikesForWater, this.isGravityFlipped('watergirl'));
 
         // Laser collisions (skip if immune)
         this.lasers.forEach(l => {
             if (!l.__active) return;
-            if (!this.isImmune('fireboy') && this.checkCollision(this.fireboy, l)) this.fireboy.respawn();
-            if (!this.isImmune('watergirl') && this.checkCollision(this.watergirl, l)) this.watergirl.respawn();
+            if (!this.isImmune('fireboy') && !this.isCrystalShielded() && this.checkCollision(this.fireboy, l)) this.fireboy.respawn();
+            if (!this.isImmune('watergirl') && !this.isCrystalShielded() && this.checkCollision(this.watergirl, l)) this.watergirl.respawn();
         });
         
         // Check collectibles
@@ -236,12 +240,51 @@ class Game {
                     return false;
                 }
             }
+            if (collectible.type === 'smoke_orb') {
+                const orbHit = this.checkCollision(this.fireboy, collectible) || this.checkCollision(this.watergirl, collectible);
+                if (orbHit) {
+                    const now = performance.now();
+                    const duration = 6000; // 6 seconds of phasing
+                    this.smokeUntil.fireboy = Math.max(this.smokeUntil.fireboy, now + duration);
+                    this.smokeUntil.watergirl = Math.max(this.smokeUntil.watergirl, now + duration);
+                    return false;
+                }
+            }
+            if (collectible.type === 'gravity_orb') {
+                const orbHit = this.checkCollision(this.fireboy, collectible) || this.checkCollision(this.watergirl, collectible);
+                if (orbHit) {
+                    const now = performance.now();
+                    const duration = 5000; // 5 seconds of inverted gravity
+                    this.gravityFlippedUntil.fireboy = Math.max(this.gravityFlippedUntil.fireboy, now + duration);
+                    this.gravityFlippedUntil.watergirl = Math.max(this.gravityFlippedUntil.watergirl, now + duration);
+                    return false;
+                }
+            }
             return true;
         });
     }
 
     isImmune(playerType) {
         return performance.now() < (this.immunityUntil[playerType] || 0);
+    }
+
+    isSmoked(playerType) {
+        return performance.now() < (this.smokeUntil[playerType] || 0);
+    }
+
+    isGravityFlipped(playerType) {
+        return performance.now() < (this.gravityFlippedUntil[playerType] || 0);
+    }
+
+    isCrystalShielded() {
+        // Crystal orb immunity covers lasers as a global shield
+        return this.isImmune('fireboy') || this.isImmune('watergirl');
+    }
+
+    getPhasePlatforms(playerType) {
+        if (!this.isSmoked(playerType)) return this.platforms;
+        // While smoked, allow passing through walls and spikes by ignoring walls for collision
+        return this.platforms.filter(p => p.type !== 'wall');
     }
     
     checkWinCondition() {
@@ -269,6 +312,7 @@ class Game {
         this.collectibles = [...this.levelData.collectibles];
         this.goals = this.levelData.goals;
         this.spikes = this.levelData.spikes || [];
+        this.lasers = this.levelData.lasers || [];
         
         // Reset player positions
         this.fireboy.respawn();

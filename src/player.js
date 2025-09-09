@@ -19,7 +19,7 @@ class Player {
         this.jumpAnimation = 0;
     }
     
-    update(keys, platforms, hazards, spikes) {
+    update(keys, platforms, hazards, spikes, gravityFlipped = false) {
         // Store previous position for collision checking
         const prevX = this.x;
         const prevY = this.y;
@@ -65,13 +65,16 @@ class Player {
             }
         }
         
-        // Apply realistic gravity
+        // Apply realistic gravity (supports inversion)
         if (!this.onGround) {
-            this.velocityY += this.gravity;
+            this.velocityY += gravityFlipped ? -this.gravity : this.gravity;
             this.jumpAnimation += 0.1;
             
-            if (this.velocityY > this.maxFallSpeed) {
+            if (!gravityFlipped && this.velocityY > this.maxFallSpeed) {
                 this.velocityY = this.maxFallSpeed;
+            }
+            if (gravityFlipped && this.velocityY < -this.maxFallSpeed) {
+                this.velocityY = -this.maxFallSpeed;
             }
         }
         
@@ -80,7 +83,7 @@ class Player {
         this.handleHorizontalCollisions(platforms, hazards, spikes, prevX);
         
         this.y += this.velocityY;
-        this.handleVerticalCollisions(platforms, hazards, spikes, prevY);
+        this.handleVerticalCollisions(platforms, hazards, spikes, prevY, gravityFlipped);
     }
     
     handleHorizontalCollisions(platforms, hazards, spikes, prevX) {
@@ -116,7 +119,7 @@ class Player {
         }
     }
     
-    handleVerticalCollisions(platforms, hazards, spikes, prevY) {
+    handleVerticalCollisions(platforms, hazards, spikes, prevY, gravityFlipped = false) {
         this.onGround = false;
         
         platforms.forEach(platform => {
@@ -126,17 +129,32 @@ class Player {
                     return;
                 }
                 
-                // Landing on top of platform (falling down)
-                if (this.velocityY > 0 && prevY + this.height <= platform.y + 5) { // Added 5px tolerance
-                    this.y = platform.y - this.height;
-                    this.velocityY = 0;
-                    this.onGround = true;
-                    this.jumpAnimation = 0;
-                }
-                // Hitting platform from below (jumping up)
-                else if (this.velocityY < 0 && prevY >= platform.y + platform.height - 5) { // Added 5px tolerance
-                    this.y = platform.y + platform.height;
-                    this.velocityY = 0; // Stop upward movement
+                if (!gravityFlipped) {
+                    // Landing on top of platform (falling down)
+                    if (this.velocityY > 0 && prevY + this.height <= platform.y + 5) {
+                        this.y = platform.y - this.height;
+                        this.velocityY = 0;
+                        this.onGround = true;
+                        this.jumpAnimation = 0;
+                    }
+                    // Hitting platform from below (jumping up)
+                    else if (this.velocityY < 0 && prevY >= platform.y + platform.height - 5) {
+                        this.y = platform.y + platform.height;
+                        this.velocityY = 0;
+                    }
+                } else {
+                    // Inverted gravity: standing on the underside of platforms
+                    if (this.velocityY < 0 && prevY >= platform.y + platform.height - 5) {
+                        this.y = platform.y + platform.height;
+                        this.velocityY = 0;
+                        this.onGround = true;
+                        this.jumpAnimation = 0;
+                    }
+                    // Bumping feet against top surface while moving downward
+                    else if (this.velocityY > 0 && prevY + this.height <= platform.y + 5) {
+                        this.y = platform.y - this.height;
+                        this.velocityY = 0;
+                    }
                 }
             }
         });
@@ -150,8 +168,10 @@ class Player {
         
         // Keep player in vertical bounds
         const worldHeight = Player.worldHeight || 600;
-        if (this.y > worldHeight) {
-            this.respawn();
+        if (!gravityFlipped) {
+            if (this.y > worldHeight) this.respawn();
+        } else {
+            if (this.y + this.height < 0) this.respawn();
         }
     }
     
